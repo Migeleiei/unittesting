@@ -24,10 +24,11 @@ public class CharacterTest {
     private GameLoop gameLoopUnderTest;
     private DrawingLoop drawingLoopUnderTest;
     private Method updateMethod, redrawMethod;
+
     @Before
     public void setup() {
         JFXPanel jfxPanel = new JFXPanel();
-        floatingCharacter = new Character(30, 30, 0, 0, KeyCode.A, KeyCode.D,KeyCode.W);
+        floatingCharacter = new Character(30, 30, 0, 0, KeyCode.A, KeyCode.D, KeyCode.W);
         characterListUnderTest = new ArrayList<Character>();
         characterListUnderTest.add(floatingCharacter);
         platformUnderTest = new Platform();
@@ -39,12 +40,13 @@ public class CharacterTest {
             updateMethod.setAccessible(true);
             redrawMethod.setAccessible(true);
 
-        }catch (NoSuchMethodException e) {
+        } catch (NoSuchMethodException e) {
             e.printStackTrace();
             updateMethod = null;
             redrawMethod = null;
         }
     }
+
     @Test
     public void characterInitialValuesShouldMatchConstructorArguments() {
         assertEquals("Initial x", 30, floatingCharacter.getX(), 0);
@@ -55,18 +57,19 @@ public class CharacterTest {
         assertEquals("Right key", KeyCode.D, floatingCharacter.getRightKey());
         assertEquals("Up key", KeyCode.W, floatingCharacter.getUpKey());
     }
+
     @Test
     public void characterShouldMoveToTheLeftAfterTheLeftKeyIsPressed() throws
             IllegalAccessException, InvocationTargetException, NoSuchFieldException {
         Character characterUnderTest = characterListUnderTest.get(0);
         int startX = characterUnderTest.getX();
         platformUnderTest.getKeys().add(KeyCode.A);
-        updateMethod.invoke(gameLoopUnderTest,characterListUnderTest);
-        redrawMethod.invoke(drawingLoopUnderTest,characterListUnderTest);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
         Field isMoveLeft = characterUnderTest.getClass().getDeclaredField("isMoveLeft");
         isMoveLeft.setAccessible(true);
-        assertTrue("Controller: Left key pressing is acknowledged",platformUnderTest. getKeys().isPressed(KeyCode.A));
-        assertTrue("Model: Character moving left state is set", isMoveLeft.getBoolean( characterUnderTest));
+        assertTrue("Controller: Left key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.A));
+        assertTrue("Model: Character moving left state is set", isMoveLeft.getBoolean(characterUnderTest));
         assertTrue("View: Character is moving left", characterUnderTest.getX() < startX);
 
     }

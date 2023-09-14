@@ -27,17 +27,19 @@ public class Platform extends Pane {
         ImageView backgroundImg = new ImageView(platformImg);
         backgroundImg.setFitHeight(HEIGHT);
         backgroundImg.setFitWidth(WIDTH);
-        characterList.add(new Character(30, 30,0,0, KeyCode.A,KeyCode.D,KeyCode.W));
-        characterList.add(new Character(Platform.WIDTH-60, 30,0,96, KeyCode.LEFT,KeyCode.RIGHT,KeyCode.UP));
-        scoreList.add(new Score(30,GROUND + 30));
-        scoreList.add(new Score(Platform.WIDTH-60,GROUND + 30));
+        characterList.add(new Character(30, 30, 0, 0, KeyCode.A, KeyCode.D, KeyCode.W));
+        characterList.add(new Character(Platform.WIDTH - 60, 30, 0, 96, KeyCode.LEFT, KeyCode.RIGHT, KeyCode.UP));
+        scoreList.add(new Score(30, GROUND + 30));
+        scoreList.add(new Score(Platform.WIDTH - 60, GROUND + 30));
         getChildren().add(backgroundImg);
         getChildren().addAll(characterList);
         getChildren().addAll(scoreList);
     }
+
     public ArrayList<Character> getCharacterList() {
         return characterList;
     }
+
     public Keys getKeys() {
         return keys;
     }
