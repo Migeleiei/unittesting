@@ -34,6 +34,7 @@ public class Character extends Pane {
     boolean isFalling = true;
     boolean canJump = false;
     boolean isJumping = false;
+    private int collisionVal = 6;
 
     public Character(int x, int y, int offsetX, int offsetY, KeyCode leftKey, KeyCode rightKey, KeyCode upKey) {
         this.startX = x;
@@ -207,4 +208,45 @@ public class Character extends Pane {
     public int getOffsetY() {
         return offsetY;
     }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void onFloor() {
+        this.y = Platform.GROUND;
+        checkReachFloor();
+    }
+
+    public boolean isCanJump() {
+        return canJump;
+    }
+
+    public boolean canPassed() {
+        return !checkReachWall2();
+    }
+
+    public boolean checkReachWall2() {
+        return x != 0 || x != Platform.WIDTH - (int) getWidth();
+    }
+
+    public int getCollisionVal() {
+        return collisionVal;
+    }
+    public void collidedTest(Character c) {
+        x = c.getX() + collisionVal;
+    }
+    public boolean isStomped(Character c) {
+        boolean check;
+        check = y < c.getY() && c.getY() - y <= CHARACTER_HEIGHT;
+        c.repaint();
+        c.collapsed();
+        c.respawn();
+        return check;
+    }
+
 }

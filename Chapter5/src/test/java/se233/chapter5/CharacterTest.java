@@ -2,8 +2,8 @@ package se233.chapter5;
 
 import javafx.embed.swing.JFXPanel;
 import javafx.scene.input.KeyCode;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
+import static org.junit.Assert.*;
 import se233.chapter5.controller.DrawingLoop;
 import se233.chapter5.controller.GameLoop;
 import se233.chapter5.model.Character;
@@ -14,11 +14,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 public class CharacterTest {
-    private Character floatingCharacter;
+    private Character floatingCharacter,floatingCharacter2;
     private ArrayList<Character> characterListUnderTest;
     private Platform platformUnderTest;
     private GameLoop gameLoopUnderTest;
@@ -29,8 +26,10 @@ public class CharacterTest {
     public void setup() {
         JFXPanel jfxPanel = new JFXPanel();
         floatingCharacter = new Character(30, 30, 0, 0, KeyCode.A, KeyCode.D, KeyCode.W);
+        floatingCharacter2 = new Character(Platform.WIDTH - 60, 30, 0, 96, KeyCode.LEFT, KeyCode.RIGHT, KeyCode.UP);
         characterListUnderTest = new ArrayList<Character>();
         characterListUnderTest.add(floatingCharacter);
+        characterListUnderTest.add(floatingCharacter2);
         platformUnderTest = new Platform();
         gameLoopUnderTest = new GameLoop(platformUnderTest);
         drawingLoopUnderTest = new DrawingLoop(platformUnderTest);
@@ -72,5 +71,90 @@ public class CharacterTest {
         assertTrue("Model: Character moving left state is set", isMoveLeft.getBoolean(characterUnderTest));
         assertTrue("View: Character is moving left", characterUnderTest.getX() < startX);
 
+    }
+    @Test
+    public void characterShouldMoveToTheRightAfterTheRightKeyIsPressed() throws
+            IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest = characterListUnderTest.get(0);
+        int startX = characterUnderTest.getX();
+        platformUnderTest.getKeys().add(KeyCode.D);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        Field isMoveRight = characterUnderTest.getClass().getDeclaredField("isMoveRight");
+        isMoveRight.setAccessible(true);
+        assertTrue("Controller: Right key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.D));
+        assertTrue("Model: Character moving right state is set",isMoveRight.getBoolean(characterUnderTest));
+        assertTrue("View: Character is moving right", characterUnderTest.getX() > startX);
+    }
+
+    @Test
+    public void characterCanBeJumpIfCharacterIsBeingOnTheGroundAndUpperKeyIsPressed() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest = characterListUnderTest.get(0);
+        platformUnderTest.getKeys().add(KeyCode.W);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        Field isCanJump = characterUnderTest.getClass().getDeclaredField("canJump");
+        isCanJump.setAccessible(true);
+        floatingCharacter.onFloor();
+        assertTrue("Controller: Upper key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.W));
+        assertTrue("Model: Character can jump state is set", characterUnderTest.isCanJump());
+        assertEquals("View: Character is being on the ground", characterUnderTest.getY(), platformUnderTest.GROUND);
+    }
+
+    @Test
+    public void characterCannotBeJumpIfCharacterIsNotBeingOnTheGroundAndUpperKeyCannotPressed() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest = characterListUnderTest.get(0);
+        platformUnderTest.getKeys().add(KeyCode.W);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        Field isCanJump = characterUnderTest.getClass().getDeclaredField("canJump");
+        isCanJump.setAccessible(false);
+        assertTrue("Controller: Upper key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.W));
+        assertFalse("Model: Character cannot jump state is set", characterUnderTest.isCanJump());
+        assertTrue("View: Character is not being on the ground", characterUnderTest.getY() < Platform.GROUND);
+    }
+
+    @Test
+    public void characterCannotPassedIfCharacterIsReachingOnTheGameWall() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest = characterListUnderTest.get(0);
+        platformUnderTest.getKeys().add(KeyCode.A);
+        platformUnderTest.getKeys().add(KeyCode.D);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        assertTrue("Controller: Left key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.A));
+        assertTrue("Controller: Right key pressing is acknowledged", platformUnderTest.getKeys().isPressed(KeyCode.D));
+        assertFalse("Model: Character cannot pass state is set", characterUnderTest.canPassed());
+        assertTrue("View: Character is reaching the game wall", characterUnderTest.checkReachWall2());
+    }
+
+    @Test
+    public void characterCanCollidedAndThenKnockBack() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest1 = characterListUnderTest.get(0);
+        Character characterUnderTest2 = characterListUnderTest.get(1);
+        int startX = characterUnderTest1.getX();
+        characterUnderTest2.setX(startX);
+        int collisionVal = characterUnderTest1.getCollisionVal();
+        platformUnderTest.getKeys().add(KeyCode.W);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        characterUnderTest1.collidedTest(characterUnderTest2);
+        assertEquals("Model: Character knock back a bit", (characterUnderTest1.getX() - characterUnderTest2.getX()), collisionVal);
+        assertTrue("View: Character collide with each other", characterUnderTest1.getBoundsInParent().intersects(characterUnderTest2.getBoundsInParent()));
+    }
+    @Test
+    public void characterStompedToEachOtherThenGetScoreAndRespawn() throws IllegalAccessException, InvocationTargetException, NoSuchFieldException {
+        Character characterUnderTest1 = characterListUnderTest.get(0);
+        Character characterUnderTest2 = characterListUnderTest.get(1);
+        updateMethod.invoke(gameLoopUnderTest, characterListUnderTest);
+        redrawMethod.invoke(drawingLoopUnderTest, characterListUnderTest);
+        int startX = characterUnderTest1.getX();
+        int startY = characterUnderTest1.getY();
+        characterUnderTest2.setX(startX);
+        characterUnderTest2.setY(startY + Character.CHARACTER_HEIGHT);
+        assertTrue("Model: Character stomped to each other, collapsed, and respawn", characterUnderTest1.isStomped(characterUnderTest2));
+        assertEquals("View: Characters1 respawn X", 30, characterUnderTest1.getX(), 0);
+        assertEquals("View: Characters1 respawn Y", 30+1, characterUnderTest1.getY(), 0);
+        assertEquals("View: Characters2 respawn X", Platform.WIDTH - 60, characterUnderTest2.getX(), 0);
+        assertEquals("View: Characters2 respawn Y", 30, characterUnderTest2.getY(), 0);
     }
 }
